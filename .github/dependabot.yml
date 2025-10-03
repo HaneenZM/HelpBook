@@ -1,0 +1,29 @@
+# Dependabot configuration file
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Node.js (npm or yarn dependencies)
+  - package-ecosystem: "npm"
+    directory: "/" # root package.json
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps"
+    open-pull-requests-limit: 10
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/" # GitHub workflows in .github/workflows
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+
+  # Prisma schema & migrations (tracked as npm but worth separating if needed)
+  - package-ecosystem: "npm"
+    directory: "/prisma"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(prisma)"
