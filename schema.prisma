@@ -1,0 +1,195 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  phone String?
+  fullName String
+  role Role
+  locale String @default("en")
+  photoUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  workerProfile WorkerProfile?
+  employerProfile EmployerProfile?
+  agency Agency? @relation(fields: [agencyId], references: [id])
+  agencyId String?
+  notifications Notification[]
+  auditLogs AuditLog[]
+}
+
+enum Role {
+  ADMIN
+  AGENCY
+  EMPLOYER
+  WORKER
+}
+
+model WorkerProfile {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  nationalId String?
+  skills String[]
+  certifications Certification[]
+  availability AvailabilitySlot[]
+  status WorkerStatus @default(ACTIVE)
+  verified Boolean @default(false)
+  city String?
+  minHourlyJOD Float?
+  bio String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum WorkerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Job {
+  id String @id @default(cuid())
+  title String
+  sector Sector
+  description String?
+  city String?
+  address String?
+  startAt DateTime
+  endAt DateTime
+  hourlyJOD Float
+  headcount Int @default(1)
+  status JobStatus @default(OPEN)
+  createdById String
+  createdBy User @relation(fields: [createdById], references: [id])
+  applications Application[]
+  shifts Shift[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Sector {
+  HOUSEHOLD
+  ELDERLY_CARE
+  TOURISM
+  HOSPITALITY
+  EVENTS
+  OTHER
+}
+
+enum JobStatus {
+  OPEN
+  FILLED
+  CANCELLED
+  CLOSED
+}
+
+model Application {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields: [jobId], references: [id])
+  workerId String
+  worker WorkerProfile @relation(fields: [workerId], references: [id])
+  status ApplicationStatus @default(PENDING)
+  note String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model EmployerProfile {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  orgName String
+  orgType String
+  city String?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Agency {
+  id String @id @default(cuid())
+  name String
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  city String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  type String
+  title String
+  body String
+  readAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id])
+  action String
+  entity String
+  entityId String
+  metadata Json?
+  createdAt DateTime @default(now())
+}
+
+model Certification {
+  id String @id @default(cuid())
+  workerId String
+  worker WorkerProfile @relation(fields: [workerId], references: [id])
+  title String
+  issuer String?
+  issueDate DateTime
+  expiryDate DateTime?
+}
+
+model AvailabilitySlot {
+  id String @id @default(cuid())
+  workerId String
+  worker WorkerProfile @relation(fields: [workerId], references: [id])
+  weekday Int
+  startHour Int
+  endHour Int
+  isRecurring Boolean @default(true)
+}
+
+model Shift {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields: [jobId], references: [id])
+  workerId String
+  worker WorkerProfile @relation(fields: [workerId], references: [id])
+  date DateTime
+  startHour Int
+  endHour Int
+  status ShiftStatus @default(SCHEDULED)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum ShiftStatus {
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
